@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>The Little Legend of Zelda</title>
+</head>
+<body>
+
+<div class="container">
+	<h1>The Little Legend of Zelda</h1>
+	<h3>Ganondorf Kill Counter: <span id="counter">0</span></h3>
+</div>	
+
+<script type="text/javascript">
+	
+// Create the canvas tag with Javascript
+var canvas = document.createElement('canvas');
+// Create a context for the Javascript to play inside of
+var context = canvas.getContext('2d');
+// Give the canvas tag some substance
+var killCount = 0; 
+
+canvas.width = 512;
+canvas.height = 480;
+//console.dir(canvas);
+//Put the Canvas element in the document
+document.body.appendChild(canvas);
+
+var bgImage = new Image();
+bgImage.src = "assets/background.png";
+
+//our stuff will go here
+
+var hero = new Image();
+hero.src = "assets/link.png";
+var heroLocation = {
+	x: 100,
+	y: 100
+}
+
+var goblin = new Image();
+goblin.src = "assets/Ganon.jpg";
+var goblinLocation = {
+	x: 150,
+	y: 100
+}
+
+// This array will hold the keycodes that are currently pressed down
+var keysDown = [];
+
+// Make the hero move!!
+addEventListener('keydown', function(event){
+	keysDown[event.keyCode] = true;
+});
+
+addEventListener('keyup', function(event){
+	delete keysDown[event.keyCode];  // or you could do keysDown[event.keyCode] = false; (less clean way to do this)
+});
+
+function update(){
+	if(canMoveRight('hero')){
+		if (39 in keysDown){
+			heroLocation.x += 10;
+		}
+	}
+		// move him right
+	if(canMoveLeft('hero')){
+		if(37 in keysDown){
+		heroLocation.x -= 10;
+		}
+	}
+		// move him left	
+	if(canMoveUp('hero')){
+		if (38 in keysDown){
+		heroLocation.y -= 10;
+		}
+	}
+		// move him up
+	if(canMoveDown('hero')){
+		if(40 in keysDown){
+		heroLocation.y += 10;
+		}	
+	}
+
+	hitGoblin();
+	moveGoblin(1)
+
+}
+var turn = 1;
+goblin.speed = 1;
+	function moveGoblin(modifier){
+		var direction = goblinDirectionChange();
+		switch(direction) {
+			case 'up':
+				if(canMoveUp('goblin')){
+					goblinLocation.y -= goblin.speed + modifier;
+					break;
+				}else{
+					goblinLocation.y = 512;
+				}
+			case 'left':
+				if(canMoveLeft('goblin')){
+					goblinLocation.x -= goblin.speed + modifier;
+					break;
+				}else{
+					goblinLocation.y = 480;
+				}
+			case 'right':
+				if(canMoveRight('goblin')){
+					goblinLocation.x += goblin.speed + modifier;
+					break;
+				}else{
+					goblinLocation.x = 0;
+				}
+			case 'down':
+				if(canMoveDown('goblin')){
+					goblinLocation.y += goblin.speed + modifier;
+					break;
+				}else{
+					goblinLocation.y = 0;
+				}
+			case 'up-left':
+				if(canMoveUp('goblin')){
+					goblinLocation.y -= goblin.speed + modifier;
+					goblinLocation.x -= goblin.speed + modifier;
+					break;
+				}else{
+					goblinLocation.y = 512;
+				}	
+			case 'up-right':
+				if(canMoveUp('goblin')){
+					goblinLocation.y -= goblin.speed + modifier;
+					goblinLocation.x += goblin.speed + modifier;
+					break;
+				}else{
+					goblinLocation.y = 512;
+				}	
+			case 'down-left':
+				if(canMoveDown('goblin')){
+					goblinLocation.x -= goblin.speed + modifier;
+					goblinLocation.y += goblin.speed + modifier;
+					break;
+				}else{
+					goblinLocation.y = 0;
+				}	
+			case 'down-right':
+				if(canMoveDown('goblin')){
+					goblinLocation.y += goblin.speed + modifier;
+					goblinLocation.x += goblin.speed + modifier;
+					break;
+				}else{
+					goblinLocation.y = 0;
+				}	
+		}
+		// console.log(goblinLocation);
+	}
+
+	function goblinDirectionChange() {
+			var direction;
+			if(turn == 1) {
+					direction = 'up';
+			}else if(turn == 2) {
+					direction = 'left';
+			}else if(turn == 3) {
+					direction = 'down';
+			}else if(turn == 4) {
+					direction = 'right';
+			}else if(turn == 5){
+					direction = 'up-left';
+			}else if(turn == 6){
+					direction = 'up-right';
+			}else if(turn == 7){
+					direction = 'down-left';
+			}else if(turn == 8){
+					direction = 'down-right';
+			}
+			return direction;
+	}
+
+	function turnGoblin(){
+		turn = Math.floor(Math.random() * 8 + 1);
+	}
+	setInterval(turnGoblin, 300);
+
+function canMoveLeft(who){
+	if(who == "hero"){
+		return heroLocation.x - 5 >= 0;
+	}else if(who == "goblin"){
+		return goblinLocation.x - 5 - 38 >= 0;
+	}	
+}
+function canMoveRight(who){
+	if(who == "hero"){
+		return heroLocation.x + 5 + 40 < 512;
+	}else if(who == "goblin"){
+		return goblinLocation.x + 5 + 38 < 512;
+	}
+}
+
+function canMoveUp(who){
+	if(who == "hero"){
+		return heroLocation.y - 5 - 40 >= 0;
+	}else if(who == "goblin"){
+		return goblinLocation.y - 5 - 40 >= 0;
+	}
+}
+
+function canMoveDown(who){
+	if(who == "hero"){
+		return heroLocation.y + 5 + 33 < 480;
+	}else if(who == "goblin"){
+		return goblinLocation.y + 5 + 38 < 480;	// move him down
+	}
+}	
+	// If the hero runs into the goblin, do X
+function hitGoblin(){
+	if((heroLocation.x <= (goblinLocation.x + 40)) 
+		&& (heroLocation.y <= (goblinLocation.y + 38)) 
+		&& (goblinLocation.x <= (heroLocation.x + 40)) 
+		&& (goblinLocation.y <= (heroLocation.y + 33))
+	){
+		// Make the goblin reappear after the hero captures him
+		goblinLocation.x = Math.floor(Math.random() * 472);
+		goblinLocation.y = Math.floor(Math.random() * 442);
+		killCount++;
+		document.getElementById('counter').innerHTML = killCount;
+	}
+}
+
+
+// left - 37
+// up - 38
+// right - 39
+// down - 40
+
+// Make the goblin reappear after the hero captures him
+
+function draw(){
+	update();
+	// This is where javascript draws our stuff!!
+	context.drawImage(bgImage, 0,0);
+	context.drawImage(hero, heroLocation.x, heroLocation.y);
+	context.drawImage(goblin, goblinLocation.x, goblinLocation.y);
+	requestAnimationFrame(draw);
+}
+
+draw();
+
+
+</script>
+
+</body>
+</html>
