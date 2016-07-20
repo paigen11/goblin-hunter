@@ -8,7 +8,17 @@
 <div class="container">
 	<h1>The Little Legend of Zelda</h1>
 	<h3>Ganondorf Kill Counter: <span id="counter">0</span></h3>
+	<h3>Rupee Counter: <span id="rupees">0</span></h3>
 </div>	
+
+<style>
+	h1, h3{
+		text-align: center;
+	}
+	.container{
+		margin: auto;
+	}
+</style>
 
 <script type="text/javascript">
 	
@@ -18,6 +28,8 @@ var canvas = document.createElement('canvas');
 var context = canvas.getContext('2d');
 // Give the canvas tag some substance
 var killCount = 0; 
+
+var rupeeCount = 0;
 
 canvas.width = 512;
 canvas.height = 480;
@@ -42,6 +54,20 @@ goblin.src = "assets/Ganon.jpg";
 var goblinLocation = {
 	x: 150,
 	y: 100
+}
+
+var blueRupee = new Image();
+blueRupee.src = "assets/blue-rupee.png";
+var rupeeBlueLocation = {
+	x: 360,
+	y: 280
+}
+
+var greenRupee1 = new Image();
+greenRupee1.src = "assets/green_rupee.png";
+var rupeeGreenLocation = {
+	x: 400,
+	y: 400
 }
 
 // This array will hold the keycodes that are currently pressed down
@@ -83,6 +109,8 @@ function update(){
 
 	hitGoblin();
 	moveGoblin(1)
+	collectGreenRupee();
+	collectBlueRupee();
 
 }
 var turn = 1;
@@ -226,6 +254,33 @@ function hitGoblin(){
 	}
 }
 
+function collectGreenRupee(){
+	if((heroLocation.x <= (rupeeGreenLocation.x + 20))
+		&& (heroLocation.y <= (rupeeGreenLocation.y + 35))
+		&& (rupeeGreenLocation.x <= (heroLocation.x + 32))
+		&& (rupeeGreenLocation.y <= (heroLocation.y + 32))
+		){
+		rupeeGreenLocation.x = Math.floor(Math.random() * 492);
+		rupeeGreenLocation.y = Math.floor(Math.random() * 445);
+		rupeeCount++;
+		document.getElementById('rupees').innerHTML = rupeeCount;
+	}
+}	
+
+function collectBlueRupee(){
+	console.log(blueRupee);
+	if((heroLocation.x <= (rupeeBlueLocation.x + 20))
+		&& (heroLocation.y <= (rupeeBlueLocation.y + 35))
+		&& (rupeeBlueLocation.x <= (heroLocation.x + 32))
+		&& (rupeeBlueLocation.y <= (heroLocation.y + 32))
+		){
+		rupeeBlueLocation.x = Math.floor(Math.random() * 492);
+		rupeeBlueLocation.y = Math.floor(Math.random() * 445);
+		rupeeCount += 5;
+		document.getElementById('rupees').innerHTML = rupeeCount;
+	}
+}	
+
 
 // left - 37
 // up - 38
@@ -240,6 +295,8 @@ function draw(){
 	context.drawImage(bgImage, 0,0);
 	context.drawImage(hero, heroLocation.x, heroLocation.y);
 	context.drawImage(goblin, goblinLocation.x, goblinLocation.y);
+	context.drawImage(blueRupee, rupeeBlueLocation.x, rupeeBlueLocation.y);
+	context.drawImage(greenRupee1, rupeeGreenLocation.x, rupeeGreenLocation.y);
 	requestAnimationFrame(draw);
 }
 
