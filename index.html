@@ -16,8 +16,14 @@
 		text-align: center;
 	}
 	.container{
-		margin: auto;
+		margin: auto;	
 	}
+
+	canvas{
+		display: block;
+		margin: 0 auto;
+	}
+	
 </style>
 
 <script type="text/javascript">
@@ -70,6 +76,14 @@ var rupeeGreenLocation = {
 	y: 400
 }
 
+// var triforce = new Image();
+// triforce.src = "assets/triforce.png";
+// var triforceLocation = {
+// 		x: 219,
+// 		y: 203
+}
+
+
 // This array will hold the keycodes that are currently pressed down
 var keysDown = [];
 
@@ -111,8 +125,10 @@ function update(){
 	moveGoblin(1)
 	collectGreenRupee();
 	collectBlueRupee();
+	
 
 }
+
 var turn = 1;
 goblin.speed = 1;
 	function moveGoblin(modifier){
@@ -268,7 +284,6 @@ function collectGreenRupee(){
 }	
 
 function collectBlueRupee(){
-	console.log(blueRupee);
 	if((heroLocation.x <= (rupeeBlueLocation.x + 20))
 		&& (heroLocation.y <= (rupeeBlueLocation.y + 35))
 		&& (rupeeBlueLocation.x <= (heroLocation.x + 32))
@@ -297,6 +312,7 @@ function draw(){
 	context.drawImage(goblin, goblinLocation.x, goblinLocation.y);
 	context.drawImage(blueRupee, rupeeBlueLocation.x, rupeeBlueLocation.y);
 	context.drawImage(greenRupee1, rupeeGreenLocation.x, rupeeGreenLocation.y);
+	context.drawImage(triforce, triforceLocation.x, triforceLocation.y);
 	requestAnimationFrame(draw);
 }
 
