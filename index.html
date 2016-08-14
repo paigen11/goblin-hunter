@@ -7,8 +7,10 @@
 
 <div class="container">
 	<h1>The Little Legend of Zelda</h1>
-	<h3>Ganondorf Kill Counter: <span id="counter">0</span></h3>
-	<h3>Rupee Counter: <span id="rupees">0</span></h3>
+	<p>Help Link kill Ganondorf. But watch out for the Sword Knight!</p>
+	<p id="message"></p>
+	<h3>Ganondorf Kill Counter: <span id="score">0</span></h3>
+	<h3>High Score: <span id="high-score">0</span></h3>
 </div>	
 
 <style>
@@ -28,295 +30,173 @@
 
 <script type="text/javascript">
 	
-// Create the canvas tag with Javascript
-var canvas = document.createElement('canvas');
-// Create a context for the Javascript to play inside of
-var context = canvas.getContext('2d');
-// Give the canvas tag some substance
-var killCount = 0; 
+var score = 0;
+var highScore = 0;
 
-var rupeeCount = 0;
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
 
-canvas.width = 512;
-canvas.height = 480;
-//console.dir(canvas);
-//Put the Canvas element in the document
-document.body.appendChild(canvas);
+//add game board
+var backgroundImage = new Image();
+backgroundImage.src = 'images/background.png';
 
-var bgImage = new Image();
-bgImage.src = "assets/background.png";
+//add hero to board
+var heroImage = new Image();
+heroImage.src = 'images/link.png';
+var hero = {
+  x: 200,
+  y: 200,
+  dirX: 0,
+  dirY: 0,
+  speed: 2
+};
 
-//our stuff will go here
+//add monster to board
+var monsterImage = new Image();
+monsterImage.src = 'images/Ganon.jpg';
+var monster = {
+  x: 300,
+  y: 300,
+  dirX: 1,
+  dirY: 0,
+  speed: 1
+};
 
-var hero = new Image();
-hero.src = "assets/link.png";
-var heroLocation = {
-	x: 100,
-	y: 100
-}
+//add 2 goblins to board
+var goblinImage = new Image();
+goblinImage.src = 'images/sword-knight.png';
+var goblins = [
+  {
+    x: 150,
+    y: 150,
+    dirX: 1,
+    dirY: 0,
+    speed: 1
+  },
+  {
+    x: 250,
+    y: 250,
+    dirX: 1,
+    dirY: 0,
+    speed: 1
+  }
+];
 
-var goblin = new Image();
-goblin.src = "assets/Ganon.jpg";
-var goblinLocation = {
-	x: 150,
-	y: 100
-}
-
-var blueRupee = new Image();
-blueRupee.src = "assets/blue-rupee.png";
-var rupeeBlueLocation = {
-	x: 360,
-	y: 280
-}
-
-var greenRupee1 = new Image();
-greenRupee1.src = "assets/green_rupee.png";
-var rupeeGreenLocation = {
-	x: 400,
-	y: 400
-}
-
-// var triforce = new Image();
-// triforce.src = "assets/triforce.png";
-// var triforceLocation = {
-// 		x: 219,
-// 		y: 203
-}
-
-
-// This array will hold the keycodes that are currently pressed down
-var keysDown = [];
-
-// Make the hero move!!
-addEventListener('keydown', function(event){
-	keysDown[event.keyCode] = true;
+//move hero around board
+window.addEventListener('keydown', function(event) {
+  var key = event.keyCode;
+  if (key === 37) { //left
+    hero.dirX = -1;
+  } else if (key === 39) { //right
+    hero.dirX = 1;
+  } else if (key === 38) { //up
+    hero.dirY = -1;
+  } else if (key === 40) {
+    hero.dirY = 1;
+  }
+  handleWrapping(hero);
+});
+window.addEventListener('keyup', function(event) {
+  var key = event.keyCode;
+  if (key === 37) { //left
+    hero.dirX = 0;
+  } else if (key === 39) { //right
+    hero.dirX = 0;
+  } else if (key === 38) { //up
+    hero.dirY = 0;
+  } else if (key === 40) {
+    hero.dirY = 0;
+  }
 });
 
-addEventListener('keyup', function(event){
-	delete keysDown[event.keyCode];  // or you could do keysDown[event.keyCode] = false; (less clean way to do this)
-});
-
-function update(){
-	if(canMoveRight('hero')){
-		if (39 in keysDown){
-			heroLocation.x += 10;
-		}
-	}
-		// move him right
-	if(canMoveLeft('hero')){
-		if(37 in keysDown){
-		heroLocation.x -= 10;
-		}
-	}
-		// move him left	
-	if(canMoveUp('hero')){
-		if (38 in keysDown){
-		heroLocation.y -= 10;
-		}
-	}
-		// move him up
-	if(canMoveDown('hero')){
-		if(40 in keysDown){
-		heroLocation.y += 10;
-		}	
-	}
-
-	hitGoblin();
-	moveGoblin(1)
-	collectGreenRupee();
-	collectBlueRupee();
-	
-
+//detect collisions
+function collision(enemy) {
+  if (hero.x + 32 < enemy.x) {
+    return false;
+  } else if (enemy.x + 32 < hero.x) {
+    return false;
+  } else if (hero.y + 32 < enemy.y) {
+    return false;
+  } else if (enemy.y + 32 < hero.y) {
+    return false;
+  }
+  return true;
 }
 
-var turn = 1;
-goblin.speed = 1;
-	function moveGoblin(modifier){
-		var direction = goblinDirectionChange();
-		switch(direction) {
-			case 'up':
-				if(canMoveUp('goblin')){
-					goblinLocation.y -= goblin.speed + modifier;
-					break;
-				}else{
-					goblinLocation.y = 512;
-				}
-			case 'left':
-				if(canMoveLeft('goblin')){
-					goblinLocation.x -= goblin.speed + modifier;
-					break;
-				}else{
-					goblinLocation.y = 480;
-				}
-			case 'right':
-				if(canMoveRight('goblin')){
-					goblinLocation.x += goblin.speed + modifier;
-					break;
-				}else{
-					goblinLocation.x = 0;
-				}
-			case 'down':
-				if(canMoveDown('goblin')){
-					goblinLocation.y += goblin.speed + modifier;
-					break;
-				}else{
-					goblinLocation.y = 0;
-				}
-			case 'up-left':
-				if(canMoveUp('goblin')){
-					goblinLocation.y -= goblin.speed + modifier;
-					goblinLocation.x -= goblin.speed + modifier;
-					break;
-				}else{
-					goblinLocation.y = 512;
-				}	
-			case 'up-right':
-				if(canMoveUp('goblin')){
-					goblinLocation.y -= goblin.speed + modifier;
-					goblinLocation.x += goblin.speed + modifier;
-					break;
-				}else{
-					goblinLocation.y = 512;
-				}	
-			case 'down-left':
-				if(canMoveDown('goblin')){
-					goblinLocation.x -= goblin.speed + modifier;
-					goblinLocation.y += goblin.speed + modifier;
-					break;
-				}else{
-					goblinLocation.y = 0;
-				}	
-			case 'down-right':
-				if(canMoveDown('goblin')){
-					goblinLocation.y += goblin.speed + modifier;
-					goblinLocation.x += goblin.speed + modifier;
-					break;
-				}else{
-					goblinLocation.y = 0;
-				}	
-		}
-		// console.log(goblinLocation);
-	}
-
-	function goblinDirectionChange() {
-			var direction;
-			if(turn == 1) {
-					direction = 'up';
-			}else if(turn == 2) {
-					direction = 'left';
-			}else if(turn == 3) {
-					direction = 'down';
-			}else if(turn == 4) {
-					direction = 'right';
-			}else if(turn == 5){
-					direction = 'up-left';
-			}else if(turn == 6){
-					direction = 'up-right';
-			}else if(turn == 7){
-					direction = 'down-left';
-			}else if(turn == 8){
-					direction = 'down-right';
-			}
-			return direction;
-	}
-
-	function turnGoblin(){
-		turn = Math.floor(Math.random() * 8 + 1);
-	}
-	setInterval(turnGoblin, 300);
-
-function canMoveLeft(who){
-	if(who == "hero"){
-		return heroLocation.x - 5 >= 0;
-	}else if(who == "goblin"){
-		return goblinLocation.x - 5 - 38 >= 0;
-	}	
-}
-function canMoveRight(who){
-	if(who == "hero"){
-		return heroLocation.x + 5 + 40 < 512;
-	}else if(who == "goblin"){
-		return goblinLocation.x + 5 + 38 < 512;
-	}
+//players wrap around board
+function handleWrapping(object) {
+  if (object.x > 512) {
+    object.x = 0;
+  }
+  if (object.x < 0) {
+    object.x = 512;
+  }
+  if (object.y > 480) {
+    object.y = 0;
+  }
+  if (object.y < 0) {
+    object.y = 480;
+  }
 }
 
-function canMoveUp(who){
-	if(who == "hero"){
-		return heroLocation.y - 5 - 40 >= 0;
-	}else if(who == "goblin"){
-		return goblinLocation.y - 5 - 40 >= 0;
-	}
+function updateEnemy(enemy) {
+  //change enemy direction
+  if (counter % 50 === 0) {
+    enemy.dirX = Math.floor(Math.random() * 3) -1;
+    enemy.dirY = Math.floor(Math.random() * 3) -1;
+  }
+  //update enemy position
+  enemy.x += enemy.dirX * enemy.speed;
+  enemy.y += enemy.dirY * enemy.speed;
+  handleWrapping(enemy);
 }
 
-function canMoveDown(who){
-	if(who == "hero"){
-		return heroLocation.y + 5 + 33 < 480;
-	}else if(who == "goblin"){
-		return goblinLocation.y + 5 + 38 < 480;	// move him down
-	}
-}	
-	// If the hero runs into the goblin, do X
-function hitGoblin(){
-	if((heroLocation.x <= (goblinLocation.x + 40)) 
-		&& (heroLocation.y <= (goblinLocation.y + 38)) 
-		&& (goblinLocation.x <= (heroLocation.x + 40)) 
-		&& (goblinLocation.y <= (heroLocation.y + 33))
-	){
-		// Make the goblin reappear after the hero captures him
-		goblinLocation.x = Math.floor(Math.random() * 472);
-		goblinLocation.y = Math.floor(Math.random() * 442);
-		killCount++;
-		document.getElementById('counter').innerHTML = killCount;
-	}
+var counter = 0;
+function main () {
+  counter++;
+  ctx.drawImage(backgroundImage, 0, 0);
+  ctx.drawImage(heroImage, hero.x, hero.y);
+
+  //hero position
+  hero.x += hero.dirX * hero.speed;
+  hero.y += hero.dirY * hero.speed;
+
+  updateEnemy(monster);
+  if (collision(monster)) {
+    score++;
+    if (score > highScore) {
+      highScore = score;
+    }
+    document.getElementById('message').innerHTML = "Way to go! You killed Ganondorf!";
+    monster.x = Math.random() * 512;
+    monster.y = Math.random() * 480;
+  }
+  ctx.drawImage(monsterImage, monster.x, monster.y);
+
+  for (var i = 0; i < goblins.length; i++) {
+    var goblin = goblins[i];
+    updateEnemy(goblin);
+    if (collision(goblin)) {
+      score = 0;
+      document.getElementById('message').innerHTML = "Aw man, the sword-knight got you! Keep trying!";
+      hero.x = 200;
+      hero.y = 200;
+      goblin.x = Math.random() * 512;
+      goblin.y = Math.random() * 480;
+      break;
+    }
+    ctx.drawImage(goblinImage, goblin.x, goblin.y);
+  }
+
+  //add score
+  ctx.font = "16px sans-serif";
+  ctx.fillStyle = "white";
+  ctx.fillText('Score: ' + score, 35, 47);
+  ctx.fillText('High Score: ' + highScore, 35, 65);
+
+  requestAnimationFrame(main);
 }
-
-function collectGreenRupee(){
-	if((heroLocation.x <= (rupeeGreenLocation.x + 20))
-		&& (heroLocation.y <= (rupeeGreenLocation.y + 35))
-		&& (rupeeGreenLocation.x <= (heroLocation.x + 32))
-		&& (rupeeGreenLocation.y <= (heroLocation.y + 32))
-		){
-		rupeeGreenLocation.x = Math.floor(Math.random() * 492);
-		rupeeGreenLocation.y = Math.floor(Math.random() * 445);
-		rupeeCount++;
-		document.getElementById('rupees').innerHTML = rupeeCount;
-	}
-}	
-
-function collectBlueRupee(){
-	if((heroLocation.x <= (rupeeBlueLocation.x + 20))
-		&& (heroLocation.y <= (rupeeBlueLocation.y + 35))
-		&& (rupeeBlueLocation.x <= (heroLocation.x + 32))
-		&& (rupeeBlueLocation.y <= (heroLocation.y + 32))
-		){
-		rupeeBlueLocation.x = Math.floor(Math.random() * 492);
-		rupeeBlueLocation.y = Math.floor(Math.random() * 445);
-		rupeeCount += 5;
-		document.getElementById('rupees').innerHTML = rupeeCount;
-	}
-}	
-
-
-// left - 37
-// up - 38
-// right - 39
-// down - 40
-
-// Make the goblin reappear after the hero captures him
-
-function draw(){
-	update();
-	// This is where javascript draws our stuff!!
-	context.drawImage(bgImage, 0,0);
-	context.drawImage(hero, heroLocation.x, heroLocation.y);
-	context.drawImage(goblin, goblinLocation.x, goblinLocation.y);
-	context.drawImage(blueRupee, rupeeBlueLocation.x, rupeeBlueLocation.y);
-	context.drawImage(greenRupee1, rupeeGreenLocation.x, rupeeGreenLocation.y);
-	context.drawImage(triforce, triforceLocation.x, triforceLocation.y);
-	requestAnimationFrame(draw);
-}
-
-draw();
+main();
 
 
 </script>
